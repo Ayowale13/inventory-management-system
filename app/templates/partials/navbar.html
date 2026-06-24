@@ -1,0 +1,13 @@
+<nav class="navbar bg-white border-bottom px-3 py-2">
+  <button class="btn btn-light d-md-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <span class="text-muted small">
+      <i class="bi bi-person-circle"></i>
+      {{ current_user.full_name or current_user.username }}
+      <span class="badge bg-{{ 'primary' if current_user.is_admin else 'secondary' }}">{{ current_user.role }}</span>
+    </span>
+    <a class="btn btn-outline-danger btn-sm" href="{{ url_for('auth.logout') }}">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+  </div>
+</nav>

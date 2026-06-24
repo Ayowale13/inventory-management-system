@@ -1,0 +1,16 @@
+# /etc/systemd/system/inventory.service
+[Unit]
+Description=Inventory Management System (Gunicorn)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/inventory-system
+Environment="PATH=/var/www/inventory-system/venv/bin"
+EnvironmentFile=/var/www/inventory-system/.env
+ExecStart=/var/www/inventory-system/venv/bin/gunicorn -c deployment/gunicorn.conf.py "run:app"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block title %}Custom Fields{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3"><h3>Custom Fields</h3>
+  <a class="btn btn-primary" href="{{ url_for('custom_fields.create') }}"><i class="bi bi-plus"></i> New Field</a></div>
+<p class="text-muted small">Custom fields appear automatically on Add Product, Edit Product, and the products table.</p>
+<div class="card"><table class="table mb-0"><thead class="table-light">
+  <tr><th>Order</th><th>Internal Name</th><th>Label</th><th>Type</th><th>Visible</th><th>Actions</th></tr></thead><tbody>
+  {% for f in fields %}
+  <tr><td>{{ f.sort_order }}</td><td><code>{{ f.name }}</code></td><td>{{ f.label }}</td><td>{{ f.field_type }}</td>
+    <td>{% if f.is_visible %}<span class="text-success">✓</span>{% else %}<span class="text-muted">✗</span>{% endif %}</td>
+    <td>
+      <form method="post" class="d-inline" action="{{ url_for('custom_fields.toggle', fid=f.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></button></form>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('custom_fields.edit', fid=f.id) }}"><i class="bi bi-pencil"></i></a>
+      <form method="post" class="d-inline" action="{{ url_for('custom_fields.delete', fid=f.id) }}" onsubmit="return confirm('Delete field?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+    </td></tr>
+  {% else %}<tr><td colspan="6" class="text-center text-muted py-4">No custom fields yet.</td></tr>{% endfor %}
+</tbody></table></div>{% endblock %}

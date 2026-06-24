@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% block title %}Restock{% endblock %}
+{% block content %}
+<h3 class="mb-3">Restock Product</h3>
+<div class="row g-3">
+  <div class="col-md-5"><div class="card"><div class="card-body">
+    <form method="get"><div class="input-group">
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Search product…">
+      <button class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </div></form>
+    <ul class="list-group mt-3">
+      {% for p in products %}
+      <li class="list-group-item d-flex justify-content-between">
+        <div><strong>{{ p.name }}</strong><br><small class="text-muted">Stock: {{ p.quantity }}</small></div>
+        <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('product_id').value={{ p.id }}; document.getElementById('sel-name').innerText='{{ p.name }}'; document.getElementById('curr').value={{ p.quantity }};">Select</button>
+      </li>
+      {% else %}{% if q %}<li class="list-group-item text-muted">No results.</li>{% endif %}{% endfor %}
+    </ul>
+  </div></div></div>
+  <div class="col-md-7"><div class="card"><div class="card-body">
+    <h6 id="sel-name" class="mb-3">Select a product</h6>
+    <form method="post">{{ form.hidden_tag() }}{{ form.product_id(id='product_id') }}
+      <div class="mb-3"><label class="form-label">Current Stock</label><input class="form-control" id="curr" disabled></div>
+      <div class="mb-3"><label class="form-label">Quantity to Add</label>{{ form.quantity_added(class="form-control") }}</div>
+      <button class="btn btn-success w-100">{{ form.submit.label.text }}</button>
+    </form>
+  </div></div></div>
+</div>
+{% endblock %}

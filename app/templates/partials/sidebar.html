@@ -1,0 +1,18 @@
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <i class="bi bi-box-seam"></i><span>Inventory</span>
+  </div>
+  <nav class="nav flex-column">
+    <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a class="nav-link" href="{{ url_for('products.list_products') }}"><i class="bi bi-bag"></i> Products</a>
+    <a class="nav-link" href="{{ url_for('sales.new_sale') }}"><i class="bi bi-cart-plus"></i> Record Sale</a>
+    <a class="nav-link" href="{{ url_for('sales.history') }}"><i class="bi bi-receipt"></i> Sales History</a>
+    {% if current_user.is_admin %}
+      <a class="nav-link" href="{{ url_for('restocks.new_restock') }}"><i class="bi bi-arrow-up-circle"></i> Restock</a>
+      <a class="nav-link" href="{{ url_for('restocks.history') }}"><i class="bi bi-clock-history"></i> Restock History</a>
+      <a class="nav-link" href="{{ url_for('reports.index') }}"><i class="bi bi-graph-up"></i> Reports</a>
+      <a class="nav-link" href="{{ url_for('custom_fields.list_fields') }}"><i class="bi bi-sliders"></i> Custom Fields</a>
+      <a class="nav-link" href="{{ url_for('users.list_users') }}"><i class="bi bi-people"></i> Users</a>
+    {% endif %}
+  </nav>
+</aside>

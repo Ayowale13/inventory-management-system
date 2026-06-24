@@ -1,0 +1,29 @@
+{% extends 'base.html' %}{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('products.list_products') }}" class="text-muted small">&larr; Back</a>
+<h3 class="mt-2">{{ product.name }}</h3>
+<div class="row g-3 mt-2">
+  <div class="col-md-6"><div class="card"><div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-5">Product ID</dt><dd class="col-7">#{{ product.id }}</dd>
+      <dt class="col-5">Category</dt><dd class="col-7">{{ product.category or '-' }}</dd>
+      <dt class="col-5">Cost Price</dt><dd class="col-7">{{ "%.2f"|format(product.cost_price) }}</dd>
+      <dt class="col-5">Selling Price</dt><dd class="col-7">{{ "%.2f"|format(product.selling_price) }}</dd>
+      <dt class="col-5">Quantity</dt><dd class="col-7">{{ product.quantity }}</dd>
+      <dt class="col-5">Min Stock</dt><dd class="col-7">{{ product.min_stock }}</dd>
+      <dt class="col-5">Status</dt><dd class="col-7"><span class="badge bg-{{ 'danger' if product.is_out_of_stock else 'warning' if product.is_low_stock else 'success' }}">{{ product.stock_status }}</span></dd>
+      <dt class="col-5">Date Added</dt><dd class="col-7">{{ product.date_added.strftime('%Y-%m-%d') }}</dd>
+      <dt class="col-5">Last Updated</dt><dd class="col-7">{{ product.last_updated.strftime('%Y-%m-%d %H:%M') }}</dd>
+    </dl>
+  </div></div></div>
+  <div class="col-md-6"><div class="card"><div class="card-body">
+    <h6>Custom Fields</h6>
+    <dl class="row mb-0">
+    {% for f in custom_fields %}
+      <dt class="col-5">{{ f.label }}</dt>
+      <dd class="col-7">{{ cv_map.get(f.id) or '-' }}</dd>
+    {% else %}<p class="text-muted small">No custom fields defined.</p>{% endfor %}
+    </dl>
+  </div></div></div>
+</div>
+{% endblock %}

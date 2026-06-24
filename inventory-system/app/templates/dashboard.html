@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h3 class="mb-4">Dashboard</h3>
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="kpi-card bg-primary"><div><small>Total Products</small><h3>{{ total_products }}</h3></div><i class="bi bi-bag"></i></div></div>
+  <div class="col-md-3"><div class="kpi-card bg-info"><div><small>Total Quantity</small><h3>{{ total_quantity }}</h3></div><i class="bi bi-boxes"></i></div></div>
+  <div class="col-md-3"><div class="kpi-card bg-success"><div><small>Sales Today</small><h3>{{ total_sales_today }}</h3></div><i class="bi bi-cart-check"></i></div></div>
+  <div class="col-md-3"><div class="kpi-card bg-warning"><div><small>Revenue Today</small><h3>{{ "%.2f"|format(total_revenue_today) }}</h3></div><i class="bi bi-currency-dollar"></i></div></div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card"><div class="card-body"><h6 class="mb-3">Revenue — last 7 days</h6><canvas id="revChart" height="100"></canvas></div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card mb-3"><div class="card-body">
+      <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Out of Stock ({{ out_of_stock|length }})</h6>
+      <ul class="small mb-0">{% for p in out_of_stock[:5] %}<li>{{ p.name }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}</ul>
+    </div></div>
+    <div class="card"><div class="card-body">
+      <h6 class="text-warning"><i class="bi bi-exclamation-circle"></i> Low Stock ({{ low_stock|length }})</h6>
+      <ul class="small mb-0">{% for p in low_stock[:5] %}<li>{{ p.name }} — {{ p.quantity }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}</ul>
+    </div></div>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card"><div class="card-body">
+    <h6 class="mb-3">Recent Sales</h6>
+    <table class="table table-sm"><thead><tr><th>Product</th><th>Qty</th><th>Total</th><th>When</th></tr></thead><tbody>
+    {% for s in recent_sales %}<tr><td>{{ s.product.name }}</td><td>{{ s.quantity }}</td><td>{{ "%.2f"|format(s.total_amount) }}</td><td class="text-muted small">{{ s.created_at.strftime('%b %d %H:%M') }}</td></tr>
+    {% else %}<tr><td colspan="4" class="text-center text-muted">No sales yet.</td></tr>{% endfor %}
+    </tbody></table></div></div></div>
+  <div class="col-lg-6"><div class="card"><div class="card-body">
+    <h6 class="mb-3">Recent Restocks</h6>
+    <table class="table table-sm"><thead><tr><th>Product</th><th>Added</th><th>New Stock</th><th>When</th></tr></thead><tbody>
+    {% for r in recent_restocks %}<tr><td>{{ r.product.name }}</td><td>+{{ r.quantity_added }}</td><td>{{ r.updated_stock }}</td><td class="text-muted small">{{ r.created_at.strftime('%b %d %H:%M') }}</td></tr>
+    {% else %}<tr><td colspan="4" class="text-center text-muted">No restocks yet.</td></tr>{% endfor %}
+    </tbody></table></div></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const ctx = document.getElementById('revChart');
+new Chart(ctx, { type: 'line',
+  data: { labels: {{ chart_days|tojson }}, datasets: [{
+    label: 'Revenue', data: {{ chart_revenues|tojson }},
+    borderColor:'#0d6efd', backgroundColor:'rgba(13,110,253,.1)', tension:.3, fill:true }]},
+  options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }});
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% block title %}Restock History{% endblock %}
+{% block content %}
+<h3 class="mb-3">Restock History</h3>
+<div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+  <thead class="table-light"><tr><th>ID</th><th>Date</th><th>Product</th><th>Previous</th><th>Added</th><th>Updated</th><th>User</th></tr></thead><tbody>
+  {% for r in pagination.items %}
+  <tr><td>#{{ r.id }}</td><td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    <td>{{ r.product.name }}</td><td>{{ r.previous_stock }}</td>
+    <td>+{{ r.quantity_added }}</td><td><strong>{{ r.updated_stock }}</strong></td>
+    <td>{{ r.user.username }}</td></tr>
+  {% else %}<tr><td colspan="7" class="text-center text-muted py-4">No restocks yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% include 'partials/pagination.html' %}
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}{% block title %}Products{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Products</h3>
+  {% if current_user.is_admin %}<a class="btn btn-primary" href="{{ url_for('products.create') }}"><i class="bi bi-plus"></i> New Product</a>{% endif %}
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4"><input class="form-control" name="q" value="{{ q }}" placeholder="Search name or ID"></div>
+  <div class="col-md-3"><input class="form-control" name="category" value="{{ cat }}" placeholder="Category"></div>
+  <div class="col-md-3"><select class="form-select" name="filter">
+    <option value="">All</option>
+    <option value="low" {% if flt=='low' %}selected{% endif %}>Low stock</option>
+    <option value="out" {% if flt=='out' %}selected{% endif %}>Out of stock</option>
+    <option value="recent" {% if flt=='recent' %}selected{% endif %}>Recently added</option>
+  </select></div>
+  <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filter</button></div>
+</form>
+<div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+  <thead class="table-light"><tr>
+    <th>ID</th><th>Name</th><th>Category</th><th>Cost</th><th>Selling</th>
+    <th>Qty</th><th>Status</th>
+    {% for f in custom_fields %}<th>{{ f.label }}</th>{% endfor %}
+    <th>Actions</th></tr></thead><tbody>
+  {% for p in pagination.items %}
+  <tr>
+    <td>#{{ p.id }}</td><td>{{ p.name }}</td><td>{{ p.category or '-' }}</td>
+    <td>{{ "%.2f"|format(p.cost_price) }}</td><td>{{ "%.2f"|format(p.selling_price) }}</td>
+    <td>{{ p.quantity }}</td>
+    <td><span class="badge bg-{{ 'danger' if p.is_out_of_stock else 'warning' if p.is_low_stock else 'success' }}">{{ p.stock_status }}</span></td>
+    {% for f in custom_fields %}<td>{% set v = (p.custom_values.filter_by(field_id=f.id).first()) %}{{ v.value if v else '-' }}</td>{% endfor %}
+    <td>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('products.detail', pid=p.id) }}"><i class="bi bi-eye"></i></a>
+      {% if current_user.is_admin %}
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('products.edit', pid=p.id) }}"><i class="bi bi-pencil"></i></a>
+        <form method="post" action="{{ url_for('products.delete', pid=p.id) }}" class="d-inline" onsubmit="return confirm('Delete this product?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}<tr><td colspan="9" class="text-center text-muted py-4">No products yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% include 'partials/pagination.html' %}
+{% endblock %}
