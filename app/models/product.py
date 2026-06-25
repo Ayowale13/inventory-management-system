@@ -1,6 +1,10 @@
 """Product model — core inventory record."""
-from datetime import datetime
+from datetime import datetime, timezone
 from app import db
+
+
+def _utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Product(db.Model):
@@ -13,8 +17,8 @@ class Product(db.Model):
     selling_price = db.Column(db.Numeric(12, 2), default=0, nullable=False)
     quantity = db.Column(db.Integer, default=0, nullable=False)
     min_stock = db.Column(db.Integer, default=5, nullable=False)
-    date_added = db.Column(db.DateTime, default=datetime.utcnow)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    date_added = db.Column(db.DateTime, default=_utcnow)
+    last_updated = db.Column(db.DateTime, default=_utcnow, onupdate=_utcnow)
 
     sales = db.relationship("Sale", backref="product", lazy="dynamic",
                             cascade="all, delete-orphan")

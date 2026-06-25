@@ -1,6 +1,10 @@
 """Restock log model."""
-from datetime import datetime
+from datetime import datetime, timezone
 from app import db
+
+
+def _utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Restock(db.Model):
@@ -12,7 +16,7 @@ class Restock(db.Model):
     previous_stock = db.Column(db.Integer, nullable=False)
     quantity_added = db.Column(db.Integer, nullable=False)
     updated_stock = db.Column(db.Integer, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
 
     def __repr__(self) -> str:
         return f"<Restock #{self.id} product={self.product_id} +{self.quantity_added}>"

@@ -1,6 +1,10 @@
 """Audit trail."""
-from datetime import datetime
+from datetime import datetime, timezone
 from app import db
+
+
+def _utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class ActivityLog(db.Model):
@@ -13,6 +17,6 @@ class ActivityLog(db.Model):
     previous_value = db.Column(db.Text)
     new_value = db.Column(db.Text)
     description = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
 
     product = db.relationship("Product")

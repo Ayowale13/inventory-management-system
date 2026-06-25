@@ -1,6 +1,10 @@
 """Sale (sales record) model."""
-from datetime import datetime
+from datetime import datetime, timezone
 from app import db
+
+
+def _utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Sale(db.Model):
@@ -12,7 +16,7 @@ class Sale(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     unit_price = db.Column(db.Numeric(12, 2), nullable=False)
     total_amount = db.Column(db.Numeric(14, 2), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
 
     def __repr__(self) -> str:
         return f"<Sale #{self.id} product={self.product_id} qty={self.quantity}>"

@@ -22,22 +22,28 @@ login_manager.login_message_category = "warning"
 
 def create_app(config_name: str | None = None) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
+
     cfg_name = config_name or os.environ.get("FLASK_ENV", "development")
     app.config.from_object(config_by_name.get(cfg_name, config_by_name["default"]))
 
+    # Ensure the instance folder exists (needed for SQLite)
     os.makedirs(app.instance_path, exist_ok=True)
 
+    # ── Extensions ────────────────────────────────────────────────────────────
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
 
+    # ── User loader ───────────────────────────────────────────────────────────
     from app.models import User
+
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        # SQLAlchemy 2.x: use Session.get() instead of deprecated Query.get()
+        return db.session.get(User, int(user_id))
 
-    # Blueprints
+    # ── Blueprints ────────────────────────────────────────────────────────────
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.products import products_bp
@@ -60,11 +66,11 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(custom_fields_bp, url_prefix="/custom-fields")
     app.register_blueprint(api_bp, url_prefix="/api")
 
-    # CLI commands
+    # ── CLI commands ─────────────────────────────────────────────────────────
     from app.utils.cli import register_cli
     register_cli(app)
 
-    # Error handlers
+    # ── Error handlers ────────────────────────────────────────────────────────
     @app.errorhandler(404)
     def not_found(_):
         return render_template("errors/404.html"), 404
@@ -78,16 +84,28 @@ def create_app(config_name: str | None = None) -> Flask:
         db.session.rollback()
         return render_template("errors/500.html"), 500
 
-    # Logging
+    # ── Logging (stdout on Render, file in other prod environments) ───────────
     if not app.debug:
-        os.makedirs("logs", exist_ok=True)
-        handler = RotatingFileHandler("logs/inventory.log", maxBytes=1_000_000, backupCount=5)
-        handler.setFormatter(logging.Formatter(
+        log_handler = logging.StreamHandler()   # Render captures stdout/stderr
+        log_handler.setFormatter(logging.Formatter(
             "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
         ))
-        handler.setLevel(logging.INFO)
-        app.logger.addHandler(handler)
+        log_handler.setLevel(logging.INFO)
+        app.logger.addHandler(log_handler)
         app.logger.setLevel(logging.INFO)
-        app.logger.info("Inventory app started")
+
+        # Optionally also write to a rotating file (skipped on Render where
+        # /logs may be read-only or ephemeral)
+        if os.environ.get("LOG_TO_FILE", "false").lower() == "true":
+            os.makedirs("logs", exist_ok=True)
+            fh = RotatingFileHandler("logs/inventory.log",
+                                     maxBytes=1_000_000, backupCount=5)
+            fh.setFormatter(logging.Formatter(
+                "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+            ))
+            fh.setLevel(logging.INFO)
+            app.logger.addHandler(fh)
+
+        app.logger.info("Inventory app started (env=%s)", cfg_name)
 
     return app

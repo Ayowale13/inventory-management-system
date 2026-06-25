@@ -1,8 +1,13 @@
 """User model with role-based access."""
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
+
+
+def _utcnow():
+    """Return timezone-naive UTC datetime (compatible with SQLite & PostgreSQL)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class User(UserMixin, db.Model):
@@ -15,7 +20,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default="staff", nullable=False)  # "admin" | "staff"
     is_active = db.Column(db.Boolean, default=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=_utcnow)
     last_login = db.Column(db.DateTime)
 
     sales = db.relationship("Sale", backref="cashier", lazy="dynamic")

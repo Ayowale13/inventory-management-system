@@ -1,15 +1,61 @@
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
 *.egg-info/
-.env
-.venv/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+lib/
+lib64/
+.installed.cfg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
 venv/
+.venv/
+ENV/
 env/
+.env/
+
+# Environment variables (NEVER commit secrets)
+.env
+
+# Flask / SQLite
 instance/
-*.db
-*.sqlite3
-migrations/versions/
-.DS_Store
-.idea/
-.vscode/
+migrations/versions/*.py   # keep the folder, ignore auto-generated files if desired
+
+# Logs
+logs/
 *.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Node (if any tooling added later)
+node_modules/
+
+# Render ephemeral files
+.render-buildpacks.json

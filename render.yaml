@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: stockpilot-inventory
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app --workers 2 --timeout 120 --bind 0.0.0.0:$PORT --log-level info
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true          # Render auto-generates a secure random value
+      - key: DATABASE_URL
+        fromDatabase:                # Wire to the Render PostgreSQL below
+          name: stockpilot-db
+          property: connectionString
+    autoDeploy: true
+
+databases:
+  - name: stockpilot-db
+    databaseName: inventory
+    user: inventory_user
+    plan: free
