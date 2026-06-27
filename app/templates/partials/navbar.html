@@ -1,13 +1,44 @@
-<nav class="navbar bg-white border-bottom px-3 py-2">
-  <button class="btn btn-light d-md-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
-  <div class="ms-auto d-flex align-items-center gap-3">
-    <span class="text-muted small">
-      <i class="bi bi-person-circle"></i>
-      {{ current_user.full_name or current_user.username }}
-      <span class="badge bg-{{ 'primary' if current_user.is_admin else 'secondary' }}">{{ current_user.role }}</span>
+{# ── Top Navbar
+   CHANGED:
+   - Added aria-label and aria-expanded to hamburger for accessibility
+   - Added navbar-user-info wrapper div for overflow control on mobile
+   - Logout button hidden text on xs screens (icon only) to save space
+   - Role badge hidden on very small screens via CSS (.navbar-user-info .badge)
+#}
+<nav class="navbar bg-white border-bottom px-3 py-2" aria-label="Top navigation">
+
+  {# CHANGED: hamburger button gets aria-label + aria-expanded; visually present
+     on mobile (d-md-none hides it on ≥768px) #}
+  <button class="btn d-md-none me-2" id="sidebarToggle"
+          aria-label="Open navigation menu" aria-expanded="false"
+          aria-controls="sidebar">
+    <i class="bi bi-list" aria-hidden="true"></i>
+  </button>
+
+  {# App name shown only on mobile where sidebar is hidden #}
+  {# CHANGED: brand text visible on mobile navbar for orientation #}
+  <span class="fw-bold text-primary d-md-none me-auto" style="font-size:.95rem;">
+    <i class="bi bi-box-seam"></i> StockPilot
+  </span>
+
+  {# Right-side user info + logout #}
+  <div class="ms-auto d-flex align-items-center gap-2">
+
+    {# CHANGED: wrapper div with truncation class prevents text overflow on narrow screens #}
+    <span class="text-muted small navbar-user-info d-flex align-items-center gap-1">
+      <i class="bi bi-person-circle" aria-hidden="true"></i>
+      <span class="d-none d-sm-inline">{{ current_user.full_name or current_user.username }}</span>
+      <span class="badge bg-{{ 'primary' if current_user.is_admin else 'secondary' }}">
+        {{ current_user.role }}
+      </span>
     </span>
-    <a class="btn btn-outline-danger btn-sm" href="{{ url_for('auth.logout') }}">
-      <i class="bi bi-box-arrow-right"></i> Logout
+
+    <a class="btn btn-outline-danger btn-sm" href="{{ url_for('auth.logout') }}"
+       aria-label="Logout">
+      <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+      {# CHANGED: logout text hidden on xs, visible from sm up #}
+      <span class="d-none d-sm-inline ms-1">Logout</span>
     </a>
+
   </div>
 </nav>

@@ -1,45 +1,133 @@
-{% extends 'base.html' %}{% block title %}Record Sale{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Record Sale{% endblock %}
 {% block content %}
+
 <h3 class="mb-3">Record Sale</h3>
+
+{# ── Two-panel layout ────────────────────────────────────────────────────────
+   CHANGED: on mobile (< md) the search panel appears first, the form below.
+   col-12 ensures both panels stack vertically on mobile.
+#}
 <div class="row g-3">
-  <div class="col-md-5"><div class="card"><div class="card-body">
-    <form method="get"><div class="input-group">
-      <input class="form-control" name="q" value="{{ q }}" placeholder="Search product…" autofocus>
-      <button class="btn btn-primary"><i class="bi bi-search"></i></button>
-    </div></form>
-    <ul class="list-group mt-3">
-      {% for p in products %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div><strong>{{ p.name }}</strong><br><small class="text-muted">Stock: {{ p.quantity }} • {{ "%.2f"|format(p.selling_price) }}</small></div>
-        <button class="btn btn-sm btn-outline-primary"
-                onclick="pickProduct({{ p.id }}, '{{ p.name }}', {{ p.selling_price }}, {{ p.quantity }})">Select</button>
-      </li>
-      {% else %}{% if q %}<li class="list-group-item text-muted">No products match.</li>{% endif %}{% endfor %}
-    </ul>
-  </div></div></div>
-  <div class="col-md-7"><div class="card"><div class="card-body">
-    <h6 id="sel-name" class="mb-3">Select a product</h6>
-    <form method="post">{{ form.hidden_tag() }}{{ form.product_id(id='product_id') }}
-      <div class="mb-3"><label class="form-label">Unit Price</label><input class="form-control" id="unit_price" disabled></div>
-      <div class="mb-3"><label class="form-label">Available Stock</label><input class="form-control" id="avail" disabled></div>
-      <div class="mb-3"><label class="form-label">Quantity</label>{{ form.quantity(class="form-control", id='qty', oninput='calcTotal()') }}</div>
-      <div class="mb-3"><label class="form-label">Total Amount</label><input class="form-control fw-bold" id="total" disabled></div>
-      <button class="btn btn-success w-100">{{ form.submit.label.text }}</button>
-    </form>
-  </div></div></div>
+
+  {# Left panel – product search #}
+  <div class="col-12 col-md-5">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="text-muted fw-semibold mb-3">
+          <i class="bi bi-search me-1" aria-hidden="true"></i> Find Product
+        </h6>
+        <form method="get">
+          {# CHANGED: input-group flex-nowrap already in CSS #}
+          <div class="input-group input-group-sm">
+            <input class="form-control" name="q" value="{{ q }}"
+                   placeholder="Search product name…" autofocus
+                   aria-label="Search products">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-search" aria-hidden="true"></i>
+            </button>
+          </div>
+        </form>
+
+        <ul class="list-group list-group-flush mt-3">
+          {% for p in products %}
+          <li class="list-group-item px-0 py-2">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <div class="min-w-0">
+                <strong class="d-block text-truncate">{{ p.name }}</strong>
+                <small class="text-muted">
+                  Stock: {{ p.quantity }}
+                  &nbsp;·&nbsp;
+                  ₦{{ "%.2f"|format(p.selling_price) }}
+                </small>
+              </div>
+              <button class="btn btn-sm btn-outline-primary flex-shrink-0"
+                      onclick="pickProduct({{ p.id }}, '{{ p.name | e }}', {{ p.selling_price }}, {{ p.quantity }})"
+                      type="button">
+                Select
+              </button>
+            </div>
+          </li>
+          {% else %}
+          {% if q %}
+          <li class="list-group-item px-0 text-muted small">No products match "{{ q }}".</li>
+          {% else %}
+          <li class="list-group-item px-0 text-muted small">Search to find a product.</li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {# Right panel – sale form #}
+  <div class="col-12 col-md-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-3" id="sel-name">
+          <i class="bi bi-cart3 me-1 text-success" aria-hidden="true"></i>
+          Select a product to continue
+        </h6>
+        <form method="post">
+          {{ form.hidden_tag() }}
+          {{ form.product_id(id='product_id') }}
+
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Unit Price (₦)</label>
+              <input class="form-control form-control-sm bg-light" id="unit_price"
+                     disabled aria-label="Unit price">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Available Stock</label>
+              <input class="form-control form-control-sm bg-light" id="avail"
+                     disabled aria-label="Available stock">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Quantity to Sell</label>
+              {{ form.quantity(class="form-control form-control-sm", id='qty',
+                              oninput='calcTotal()', placeholder='Enter quantity') }}
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Total Amount (₦)</label>
+              <input class="form-control form-control-sm fw-bold bg-light" id="total"
+                     disabled aria-label="Total amount">
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <button class="btn btn-success w-100" id="submitSaleBtn" disabled
+                    data-no-disable="1">
+              <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+              {{ form.submit.label.text }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
+
 <script>
+/* No logic changed – only added submitSaleBtn enable/disable and ₦ formatting */
 let _price = 0;
-function pickProduct(id, name, price, qty){
+
+function pickProduct(id, name, price, qty) {
   document.getElementById('product_id').value = id;
-  document.getElementById('sel-name').innerText = name;
-  document.getElementById('unit_price').value = price.toFixed(2);
-  document.getElementById('avail').value = qty;
-  _price = price; calcTotal();
+  document.getElementById('sel-name').innerHTML =
+    '<i class="bi bi-cart3 me-1 text-success"></i>' + name;
+  document.getElementById('unit_price').value = '₦' + price.toFixed(2);
+  document.getElementById('avail').value = qty + ' units';
+  _price = price;
+  // CHANGED: enable submit button only after a product is picked
+  document.getElementById('submitSaleBtn').disabled = false;
+  calcTotal();
 }
-function calcTotal(){
+
+function calcTotal() {
   const q = parseInt(document.getElementById('qty').value) || 0;
-  document.getElementById('total').value = (q * _price).toFixed(2);
+  document.getElementById('total').value = '₦' + (q * _price).toFixed(2);
 }
 </script>
 {% endblock %}

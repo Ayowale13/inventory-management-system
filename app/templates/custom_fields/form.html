@@ -1,15 +1,49 @@
-{% extends 'base.html' %}{% block title %}{{ action }} Field{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ action }} Field{% endblock %}
 {% block content %}
+
 <h3 class="mb-3">{{ action }} Custom Field</h3>
-<div class="card"><div class="card-body">
-<form method="post">{{ form.hidden_tag() }}
-  <div class="row g-3">
-    <div class="col-md-6"><label class="form-label">Internal Name</label>{{ form.name(class="form-control") }}<small class="text-muted">Used as a key. Lowercase, no spaces.</small></div>
-    <div class="col-md-6"><label class="form-label">Display Label</label>{{ form.label(class="form-control") }}</div>
-    <div class="col-md-4"><label class="form-label">Field Type</label>{{ form.field_type(class="form-select") }}</div>
-    <div class="col-md-4"><label class="form-label">Sort Order</label>{{ form.sort_order(class="form-control") }}</div>
-    <div class="col-md-4 d-flex align-items-center"><div class="form-check mt-4">{{ form.is_visible(class="form-check-input") }}<label class="form-check-label">Visible in table</label></div></div>
+
+<div class="card" style="max-width: 640px;">
+  <div class="card-body">
+    <form method="post">
+      {{ form.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Internal Name</label>
+          {{ form.name(class="form-control form-control-sm") }}
+          <div class="form-text">Lowercase, no spaces. Used as a database key.</div>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Display Label</label>
+          {{ form.label(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label small fw-semibold">Field Type</label>
+          {{ form.field_type(class="form-select form-select-sm") }}
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label small fw-semibold">Sort Order</label>
+          {{ form.sort_order(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-12 col-md-4 d-flex align-items-end">
+          <div class="form-check mb-1">
+            {{ form.is_visible(class="form-check-input") }}
+            <label class="form-check-label small fw-semibold">Visible in table</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary btn-sm">
+          <i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ form.submit.label.text }}
+        </button>
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('custom_fields.list_fields') }}">
+          Cancel
+        </a>
+      </div>
+    </form>
   </div>
-  <div class="mt-3"><button class="btn btn-primary">{{ form.submit.label.text }}</button>
-    <a class="btn btn-secondary" href="{{ url_for('custom_fields.list_fields') }}">Cancel</a></div>
-</form></div></div>{% endblock %}
+</div>
+
+{% endblock %}

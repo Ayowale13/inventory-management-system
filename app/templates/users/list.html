@@ -1,19 +1,73 @@
-{% extends 'base.html' %}{% block title %}Users{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Users{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between mb-3"><h3>Users</h3>
-  <a class="btn btn-primary" href="{{ url_for('users.create') }}"><i class="bi bi-plus"></i> New User</a></div>
-<div class="card"><table class="table mb-0"><thead class="table-light">
-  <tr><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Active</th><th>Actions</th></tr></thead><tbody>
-  {% for u in users %}
-  <tr><td>{{ u.username }}</td><td>{{ u.full_name or '-' }}</td><td>{{ u.email }}</td>
-    <td><span class="badge bg-{{ 'primary' if u.is_admin else 'secondary' }}">{{ u.role }}</span></td>
-    <td>{% if u.is_active %}<span class="text-success">✓</span>{% else %}<span class="text-danger">✗</span>{% endif %}</td>
-    <td>
-      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('users.edit', uid=u.id) }}"><i class="bi bi-pencil"></i></a>
-      <form method="post" class="d-inline" action="{{ url_for('users.delete', uid=u.id) }}" onsubmit="return confirm('Delete user?')">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-      </form>
-    </td></tr>
-  {% endfor %}
-</tbody></table></div>{% endblock %}
+
+{# CHANGED: flex-wrap gap so heading and button don't clash on mobile #}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h3 class="mb-0">Users</h3>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('users.create') }}">
+    <i class="bi bi-plus-lg" aria-hidden="true"></i> New User
+  </a>
+</div>
+
+{# CHANGED: table-responsive wrapper + selective column hiding on small screens #}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Username</th>
+          <th class="d-none d-md-table-cell">Full Name</th>
+          <th class="d-none d-lg-table-cell">Email</th>
+          <th>Role</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <strong>{{ u.username }}</strong>
+            {# Show full name below username on xs where name col is hidden #}
+            <span class="d-block d-md-none text-muted small">{{ u.full_name or '' }}</span>
+          </td>
+          <td class="d-none d-md-table-cell">{{ u.full_name or '—' }}</td>
+          <td class="d-none d-lg-table-cell text-muted small">{{ u.email }}</td>
+          <td>
+            <span class="badge bg-{{ 'primary' if u.is_admin else 'secondary' }}">
+              {{ u.role }}
+            </span>
+          </td>
+          <td>
+            {% if u.is_active %}
+              <i class="bi bi-check-circle-fill text-success" aria-label="Active"></i>
+            {% else %}
+              <i class="bi bi-x-circle-fill text-danger" aria-label="Inactive"></i>
+            {% endif %}
+          </td>
+          <td>
+            <div class="table-action-btns">
+              <a class="btn btn-sm btn-outline-primary"
+                 href="{{ url_for('users.edit', uid=u.id) }}"
+                 title="Edit user">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+              </a>
+              <form method="post" class="d-inline"
+                    action="{{ url_for('users.delete', uid=u.id) }}"
+                    onsubmit="return confirm('Delete {{ u.username }}? This cannot be undone.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" title="Delete user">
+                  <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

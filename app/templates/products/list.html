@@ -1,45 +1,131 @@
-{% extends 'base.html' %}{% block title %}Products{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Products{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
+
+{# ── Page Header ────────────────────────────────────────────────────────────
+   CHANGED: flex-wrap added so button doesn't push heading off screen on mobile
+#}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <h3 class="mb-0">Products</h3>
-  {% if current_user.is_admin %}<a class="btn btn-primary" href="{{ url_for('products.create') }}"><i class="bi bi-plus"></i> New Product</a>{% endif %}
+  {% if current_user.is_admin %}
+    <a class="btn btn-primary btn-sm" href="{{ url_for('products.create') }}">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i> New Product
+    </a>
+  {% endif %}
 </div>
-<form class="row g-2 mb-3" method="get">
-  <div class="col-md-4"><input class="form-control" name="q" value="{{ q }}" placeholder="Search name or ID"></div>
-  <div class="col-md-3"><input class="form-control" name="category" value="{{ cat }}" placeholder="Category"></div>
-  <div class="col-md-3"><select class="form-select" name="filter">
-    <option value="">All</option>
-    <option value="low" {% if flt=='low' %}selected{% endif %}>Low stock</option>
-    <option value="out" {% if flt=='out' %}selected{% endif %}>Out of stock</option>
-    <option value="recent" {% if flt=='recent' %}selected{% endif %}>Recently added</option>
-  </select></div>
-  <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filter</button></div>
+
+{# ── Filter Form ─────────────────────────────────────────────────────────────
+   CHANGED: added .filter-form class so CSS can stack fields on mobile;
+   button is full-width on mobile for easier tapping
+#}
+<form class="row g-2 mb-3 filter-form" method="get">
+  <div class="col-12 col-md-4">
+    <input class="form-control form-control-sm" name="q" value="{{ q }}"
+           placeholder="Search name or ID" aria-label="Search products">
+  </div>
+  <div class="col-12 col-md-3">
+    <input class="form-control form-control-sm" name="category" value="{{ cat }}"
+           placeholder="Category" aria-label="Filter by category">
+  </div>
+  <div class="col-12 col-md-3">
+    <select class="form-select form-select-sm" name="filter" aria-label="Stock filter">
+      <option value="">All stock levels</option>
+      <option value="low"    {% if flt=='low'    %}selected{% endif %}>Low stock</option>
+      <option value="out"    {% if flt=='out'    %}selected{% endif %}>Out of stock</option>
+      <option value="recent" {% if flt=='recent' %}selected{% endif %}>Recently added</option>
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <button class="btn btn-outline-primary btn-sm w-100" type="submit">
+      <i class="bi bi-funnel" aria-hidden="true"></i> Filter
+    </button>
+  </div>
 </form>
-<div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-  <thead class="table-light"><tr>
-    <th>ID</th><th>Name</th><th>Category</th><th>Cost</th><th>Selling</th>
-    <th>Qty</th><th>Status</th>
-    {% for f in custom_fields %}<th>{{ f.label }}</th>{% endfor %}
-    <th>Actions</th></tr></thead><tbody>
-  {% for p in pagination.items %}
-  <tr>
-    <td>#{{ p.id }}</td><td>{{ p.name }}</td><td>{{ p.category or '-' }}</td>
-    <td>{{ "%.2f"|format(p.cost_price) }}</td><td>{{ "%.2f"|format(p.selling_price) }}</td>
-    <td>{{ p.quantity }}</td>
-    <td><span class="badge bg-{{ 'danger' if p.is_out_of_stock else 'warning' if p.is_low_stock else 'success' }}">{{ p.stock_status }}</span></td>
-    {% for f in custom_fields %}<td>{% set v = (p.custom_values.filter_by(field_id=f.id).first()) %}{{ v.value if v else '-' }}</td>{% endfor %}
-    <td>
-      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('products.detail', pid=p.id) }}"><i class="bi bi-eye"></i></a>
-      {% if current_user.is_admin %}
-        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('products.edit', pid=p.id) }}"><i class="bi bi-pencil"></i></a>
-        <form method="post" action="{{ url_for('products.delete', pid=p.id) }}" class="d-inline" onsubmit="return confirm('Delete this product?')">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-        </form>
-      {% endif %}
-    </td>
-  </tr>
-  {% else %}<tr><td colspan="9" class="text-center text-muted py-4">No products yet.</td></tr>{% endfor %}
-</tbody></table></div></div>
+
+{# ── Products Table ──────────────────────────────────────────────────────────
+   CHANGED: table-responsive div already present; confirmed it wraps the table
+   so mobile users can scroll horizontally. Action buttons given flex wrapper.
+#}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th class="d-none d-sm-table-cell">Category</th>
+          <th class="d-none d-md-table-cell">Cost (₦)</th>
+          <th>Price (₦)</th>
+          <th>Qty</th>
+          <th>Status</th>
+          {# Custom field headers #}
+          {% for f in custom_fields %}
+            <th class="d-none d-lg-table-cell">{{ f.label }}</th>
+          {% endfor %}
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pagination.items %}
+        <tr>
+          <td class="text-muted small">#{{ p.id }}</td>
+          <td>
+            <a class="text-decoration-none fw-semibold"
+               href="{{ url_for('products.detail', pid=p.id) }}">
+              {{ p.name }}
+            </a>
+          </td>
+          <td class="d-none d-sm-table-cell text-muted small">{{ p.category or '—' }}</td>
+          <td class="d-none d-md-table-cell">{{ "%.2f"|format(p.cost_price) }}</td>
+          <td>{{ "%.2f"|format(p.selling_price) }}</td>
+          <td><strong>{{ p.quantity }}</strong></td>
+          <td>
+            <span class="badge bg-{{ 'danger' if p.is_out_of_stock else 'warning text-dark' if p.is_low_stock else 'success' }}">
+              {{ p.stock_status }}
+            </span>
+          </td>
+          {# Custom field values – hidden on small screens to reduce clutter #}
+          {% for f in custom_fields %}
+            <td class="d-none d-lg-table-cell small text-muted">
+              {% set v = p.custom_values.filter_by(field_id=f.id).first() %}
+              {{ v.value if v else '—' }}
+            </td>
+          {% endfor %}
+          <td>
+            {# CHANGED: flex wrapper so buttons don't overflow on narrow cells #}
+            <div class="table-action-btns">
+              <a class="btn btn-sm btn-outline-secondary"
+                 href="{{ url_for('products.detail', pid=p.id) }}"
+                 title="View"><i class="bi bi-eye" aria-hidden="true"></i></a>
+              {% if current_user.is_admin %}
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ url_for('products.edit', pid=p.id) }}"
+                   title="Edit"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                <form method="post"
+                      action="{{ url_for('products.delete', pid=p.id) }}"
+                      class="d-inline"
+                      onsubmit="return confirm('Delete {{ p.name }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="10" class="text-center text-muted py-4">
+            <i class="bi bi-inbox fs-3 d-block mb-2 opacity-50" aria-hidden="true"></i>
+            No products found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
 {% include 'partials/pagination.html' %}
 {% endblock %}

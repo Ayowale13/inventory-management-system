@@ -1,45 +1,443 @@
-:root{
-  --sidebar-w: 240px;
-  --brand:#0d6efd;
-  --sidebar-bg:#1e293b;
-  --sidebar-fg:#cbd5e1;
-}
-body{ background:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+/* ==========================================================================
+   StockPilot – app.css
+   Responsive overhaul: mobile-first, off-canvas sidebar, fluid layouts.
+   Desktop appearance is intentionally preserved; changes activate ≤768 px.
+   ========================================================================== */
 
-/* Sidebar */
-.sidebar{
-  position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w);
-  background:var(--sidebar-bg); color:var(--sidebar-fg); padding:1rem 0;
-  overflow-y:auto; transition:transform .25s ease;
-}
-.sidebar-brand{ display:flex; gap:.6rem; align-items:center; font-weight:600;
-  color:#fff; padding:.5rem 1.25rem 1.25rem; font-size:1.15rem; border-bottom:1px solid rgba(255,255,255,.08); margin-bottom:.75rem;}
-.sidebar-brand i{ font-size:1.4rem; color:var(--brand);}
-.sidebar .nav-link{ color:var(--sidebar-fg); padding:.6rem 1.25rem; border-left:3px solid transparent; font-size:.92rem;}
-.sidebar .nav-link:hover{ color:#fff; background:rgba(255,255,255,.05);}
-.sidebar .nav-link.active{ color:#fff; background:rgba(13,110,253,.18); border-left-color:var(--brand);}
-.sidebar .nav-link i{ width:22px;}
-
-.main-wrap{ margin-left:var(--sidebar-w); min-height:100vh;}
-@media (max-width: 768px){
-  .sidebar{ transform:translateX(-100%);}
-  .sidebar.open{ transform:translateX(0);}
-  .main-wrap{ margin-left:0;}
+/* ── CSS Custom Properties ─────────────────────────────────────────────── */
+:root {
+  --sidebar-w:    240px;
+  --brand:        #0d6efd;
+  --sidebar-bg:   #1e293b;
+  --sidebar-fg:   #cbd5e1;
+  --bg-page:      #f1f5f9;
+  --card-radius:  0.75rem;
+  --shadow-card:  0 2px 8px rgba(0,0,0,.07);
+  --navbar-h:     56px;
+  --overlay-bg:   rgba(0,0,0,.45);
+  /* Overlay z-index layering */
+  --z-sidebar:    1045;
+  --z-overlay:    1044;
+  --z-navbar:     1040;
+  --z-toast:      1080;
 }
 
-/* KPI cards */
-.kpi-card{ color:#fff; border-radius:.75rem; padding:1.1rem 1.25rem;
-  display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 12px rgba(0,0,0,.06);}
-.kpi-card i{ font-size:2.2rem; opacity:.4;}
-.kpi-card h3{ margin:0; font-size:1.6rem; font-weight:600;}
-.kpi-card small{ opacity:.85; font-size:.78rem; text-transform:uppercase; letter-spacing:.5px;}
+/* ── Base ──────────────────────────────────────────────────────────────── */
+body {
+  background: var(--bg-page);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Prevent horizontal scroll on mobile caused by overflowing children */
+  overflow-x: hidden;
+}
 
-/* Login */
-.login-shell{ min-height:100vh; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg,#0d6efd 0%,#6610f2 100%); padding:1rem;}
-.login-card{ width:100%; max-width:420px; background:#fff; border-radius:1rem; padding:2.25rem;}
-.brand-circle{ width:64px; height:64px; border-radius:50%; background:#e7f1ff;
-  display:inline-flex; align-items:center; justify-content:center; font-size:1.8rem; color:var(--brand);}
+/* ── Sidebar ───────────────────────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-fg);
+  padding: 1rem 0;
+  overflow-y: auto;
+  /* Smooth slide animation used on both mobile (off-canvas) and desktop */
+  transition: transform .28s ease, box-shadow .28s ease;
+  z-index: var(--z-sidebar);
+  /* Custom scrollbar for sidebar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.15) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
 
-.card{ border:none; border-radius:.75rem; box-shadow:0 2px 6px rgba(0,0,0,.04);}
-.table thead.table-light th{ font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; color:#64748b;}
+.sidebar-brand {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  font-weight: 700;
+  color: #fff;
+  padding: .5rem 1.25rem 1.25rem;
+  font-size: 1.15rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: .75rem;
+  letter-spacing: .01em;
+}
+.sidebar-brand i { font-size: 1.4rem; color: var(--brand); }
+
+/* Nav links */
+.sidebar .nav-link {
+  color: var(--sidebar-fg);
+  padding: .6rem 1.25rem;
+  border-left: 3px solid transparent;
+  font-size: .92rem;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  /* Smooth colour transition on hover/active */
+  transition: color .15s, background .15s, border-color .15s;
+}
+.sidebar .nav-link:hover {
+  color: #fff;
+  background: rgba(255,255,255,.06);
+}
+.sidebar .nav-link.active {
+  color: #fff;
+  background: rgba(13,110,253,.2);
+  border-left-color: var(--brand);
+  font-weight: 600;
+}
+/* Fixed-width icon column keeps labels aligned */
+.sidebar .nav-link i { width: 20px; text-align: center; flex-shrink: 0; }
+
+/* Optional nav-section divider label */
+.sidebar-section-label {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: rgba(255,255,255,.35);
+  padding: .9rem 1.25rem .3rem;
+}
+
+/* ── Dark overlay – appears behind off-canvas sidebar on mobile ─────────── */
+.sidebar-overlay {
+  display: none;          /* hidden by default; JS adds .show */
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  z-index: var(--z-overlay);
+  /* Fade in/out */
+  opacity: 0;
+  transition: opacity .28s ease;
+}
+.sidebar-overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+/* ── Main content wrapper ────────────────────────────────────────────────── */
+.main-wrap {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  /* Prevent children from bleeding past the right edge */
+  min-width: 0;
+}
+
+/* ── Top Navbar ─────────────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-navbar);
+  /* Slightly elevated so content scrolls underneath */
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  min-height: var(--navbar-h);
+}
+
+/* Hamburger button – always present in DOM, hidden on desktop via Bootstrap d-md-none */
+#sidebarToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 1.35rem;
+  color: #344054;
+  background: transparent;
+  border: 1px solid #d0d5dd;
+  border-radius: .45rem;
+  transition: background .15s;
+}
+#sidebarToggle:hover { background: #f2f4f7; }
+
+/* User info in navbar – truncate gracefully on narrow screens */
+.navbar-user-info {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Page content padding ────────────────────────────────────────────────── */
+main.container-fluid {
+  padding: 1.5rem 1.25rem;
+}
+
+/* Page headings */
+main h3.page-title,
+main > h3:first-child {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1a2640;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+  border: none;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+  /* Prevent card content from overflowing on narrow viewports */
+  overflow: hidden;
+  min-width: 0;
+}
+.card-body { padding: 1.1rem 1.25rem; }
+
+/* ── KPI Dashboard Cards ─────────────────────────────────────────────────── */
+.kpi-card {
+  color: #fff;
+  border-radius: var(--card-radius);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 14px rgba(0,0,0,.10);
+  min-width: 0;
+  /* Ensure text block shrinks and doesn't overflow */
+  gap: .75rem;
+}
+.kpi-card .kpi-text { min-width: 0; }
+.kpi-card h3 {
+  margin: 0;
+  /* Clamp large numbers to prevent overflow */
+  font-size: clamp(1.2rem, 4vw, 1.65rem);
+  font-weight: 700;
+  /* Ellipsis if number is extraordinarily long */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpi-card small {
+  opacity: .88;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Icon – shrinks the opacity fade so it never interferes with the text */
+.kpi-card .kpi-icon {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  opacity: .35;
+  flex-shrink: 0;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+/* Always wrap in .table-responsive so they scroll horizontally on mobile */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  /* Small shadow hint to show the table is scrollable */
+  background:
+    linear-gradient(to right, #fff 30%, rgba(255,255,255,0)),
+    linear-gradient(to right, rgba(255,255,255,0), #fff 70%) 0 100%,
+    radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,.08), rgba(0,0,0,0)),
+    radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.08), rgba(0,0,0,0)) 0 100%;
+  background-repeat: no-repeat;
+  background-color: #fff;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-position: 0 0, 100%, 0 0, 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.table thead.table-light th {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #64748b;
+  /* Prevent header text wrapping on wide tables */
+  white-space: nowrap;
+}
+/* Ensure table cells don't shrink text to illegibility */
+.table td, .table th { vertical-align: middle; }
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+.form-control, .form-select {
+  font-size: .92rem;
+}
+/* Input group – ensure button doesn't wrap under input on mobile */
+.input-group { flex-wrap: nowrap; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+/* Action button groups in list views – wrap on very small screens */
+.btn-group-wrap { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+/* ── Login Page ──────────────────────────────────────────────────────────── */
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+  padding: 1rem;
+}
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2.25rem;
+  /* Small shadow lift */
+  box-shadow: 0 20px 60px rgba(0,0,0,.22);
+}
+.brand-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e7f1ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--brand);
+}
+
+/* ── Flash / Toast notifications ─────────────────────────────────────────── */
+.toast-container {
+  z-index: var(--z-toast) !important;
+  /* Give breathing room from top on mobile */
+  top: calc(var(--navbar-h) + .5rem) !important;
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────────── */
+.badge { font-size: .72rem; font-weight: 600; }
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.pagination { flex-wrap: wrap; gap: .2rem; }
+.page-link { font-size: .85rem; }
+
+/* ── Reports page – export button group ──────────────────────────────────── */
+.btn-group.report-exports { flex-wrap: wrap; }
+
+/* ── Activity log / detail lists ─────────────────────────────────────────── */
+dl.row dt { font-weight: 600; color: #374151; }
+dl.row dd { color: #374151; }
+
+/* ── Utility: visually hidden but focusable (skip links) ─────────────────── */
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* =========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================= */
+
+/* ── ≤ 991px (tablets and small laptops) ────────────────────────────────── */
+@media (max-width: 991.98px) {
+  /* Slightly smaller page padding */
+  main.container-fluid { padding: 1.25rem 1rem; }
+
+  /* KPI cards: 2-column grid instead of 4 */
+  .kpi-row { --bs-gutter-x: .75rem; }
+
+  /* Reports cards stack to 1 col below md */
+  .report-card-col { width: 100%; }
+}
+
+/* ── ≤ 767px (mobile phones) ─────────────────────────────────────────────
+   Core changes:
+   • Sidebar hides off-screen (off-canvas pattern)
+   • .main-wrap uses full width
+   • KPI cards stack to 2 per row, then 1 per row below 480px
+   • Tables are horizontally scrollable
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+
+  /* --- Sidebar off-canvas ------------------------------------------------ */
+  .sidebar {
+    /* Push completely off-screen to the left */
+    transform: translateX(-100%);
+    /* Elevated shadow when open */
+    box-shadow: none;
+    /* Width slightly narrower than full viewport so overlay is visible */
+    width: min(var(--sidebar-w), 82vw);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 6px 0 24px rgba(0,0,0,.22);
+  }
+
+  /* --- Main content uses full viewport width ----------------------------- */
+  .main-wrap { margin-left: 0; }
+
+  /* --- Tighter page padding on phones ------------------------------------ */
+  main.container-fluid { padding: 1rem .75rem; }
+
+  /* --- Page heading size ------------------------------------------------- */
+  main > h3 { font-size: 1.2rem; }
+
+  /* --- KPI cards: 2 per row on phones ------------------------------------ */
+  /* Uses the col-6 class already in the template via Bootstrap */
+
+  /* Reduce internal padding of KPI card a little */
+  .kpi-card { padding: .9rem 1rem; }
+  .kpi-card .kpi-icon { font-size: 1.55rem; }
+
+  /* --- Dashboard chart area: full width ---------------------------------- */
+  /* Chart.js will resize automatically because we use maintainAspectRatio */
+
+  /* --- Tables ------------------------------------------------------------ */
+  /* Ensure every table inside a card is horizontally scrollable */
+  .card > .table-responsive,
+  .card-body > .table-responsive {
+    border-radius: 0;
+  }
+  /* Slightly smaller table font to fit more columns */
+  .table { font-size: .82rem; }
+  .table th, .table td { padding: .45rem .5rem; }
+
+  /* --- Filter form: stack all fields ─────────────────────────────────── */
+  .filter-form .col-md-4,
+  .filter-form .col-md-3,
+  .filter-form .col-md-2 {
+    width: 100%;
+  }
+
+  /* --- Action button columns in tables: stack icon buttons --------------- */
+  .table-action-btns { display: flex; flex-wrap: wrap; gap: .2rem; }
+
+  /* --- Report export button group: wrap ---------------------------------- */
+  .btn-group { flex-wrap: wrap; }
+
+  /* --- Sale/Restock forms: single column --------------------------------- */
+  /* col-md-5 and col-md-7 become full width automatically via Bootstrap */
+
+  /* --- User navbar info: hide role badge on very small screens ----------- */
+  .navbar-user-info .badge { display: none; }
+
+  /* --- Login card: reduce padding on small screens ----------------------- */
+  .login-card { padding: 1.75rem 1.25rem; }
+
+  /* --- Navbar height ─────────────────────────────────────────────────── */
+  .navbar { min-height: 52px; }
+}
+
+/* ── ≤ 479px (very small phones – iPhone SE etc.) ───────────────────────── */
+@media (max-width: 479.98px) {
+
+  /* KPI cards: 1 per row for phones narrower than 480px */
+  .kpi-col { width: 100% !important; }
+
+  /* Even tighter page padding */
+  main.container-fluid { padding: .75rem .6rem; }
+
+  /* Page title */
+  main > h3 { font-size: 1.1rem; }
+
+  /* Login */
+  .login-card { padding: 1.5rem 1rem; border-radius: .75rem; }
+
+  /* Pagination: smaller buttons */
+  .page-link { padding: .3rem .55rem; font-size: .78rem; }
+}
+
+/* ── Print ───────────────────────────────────────────────────────────────── */
+@media print {
+  .sidebar, .navbar, #sidebarToggle, .sidebar-overlay { display: none !important; }
+  .main-wrap { margin-left: 0 !important; }
+  .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+}

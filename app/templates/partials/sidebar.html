@@ -1,18 +1,50 @@
-<aside class="sidebar">
+{# ── Sidebar
+   CHANGED: added aria-label for accessibility; the nav section labels and
+   icon alignment are preserved from the original. No routes changed. #}
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+
   <div class="sidebar-brand">
-    <i class="bi bi-box-seam"></i><span>Inventory</span>
+    <i class="bi bi-box-seam" aria-hidden="true"></i>
+    <span>StockPilot</span>
   </div>
+
   <nav class="nav flex-column">
-    <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a class="nav-link" href="{{ url_for('products.list_products') }}"><i class="bi bi-bag"></i> Products</a>
-    <a class="nav-link" href="{{ url_for('sales.new_sale') }}"><i class="bi bi-cart-plus"></i> Record Sale</a>
-    <a class="nav-link" href="{{ url_for('sales.history') }}"><i class="bi bi-receipt"></i> Sales History</a>
+
+    {# ── Available to all authenticated users ─────────────────────────── #}
+    <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+      <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard
+    </a>
+    <a class="nav-link" href="{{ url_for('products.list_products') }}">
+      <i class="bi bi-bag" aria-hidden="true"></i> Products
+    </a>
+    <a class="nav-link" href="{{ url_for('sales.new_sale') }}">
+      <i class="bi bi-cart-plus" aria-hidden="true"></i> Record Sale
+    </a>
+    <a class="nav-link" href="{{ url_for('sales.history') }}">
+      <i class="bi bi-receipt" aria-hidden="true"></i> Sales History
+    </a>
+
+    {# ── Admin-only section ───────────────────────────────────────────── #}
     {% if current_user.is_admin %}
-      <a class="nav-link" href="{{ url_for('restocks.new_restock') }}"><i class="bi bi-arrow-up-circle"></i> Restock</a>
-      <a class="nav-link" href="{{ url_for('restocks.history') }}"><i class="bi bi-clock-history"></i> Restock History</a>
-      <a class="nav-link" href="{{ url_for('reports.index') }}"><i class="bi bi-graph-up"></i> Reports</a>
-      <a class="nav-link" href="{{ url_for('custom_fields.list_fields') }}"><i class="bi bi-sliders"></i> Custom Fields</a>
-      <a class="nav-link" href="{{ url_for('users.list_users') }}"><i class="bi bi-people"></i> Users</a>
+    {# CHANGED: visual divider label separates admin from staff links #}
+    <span class="sidebar-section-label">Admin</span>
+
+    <a class="nav-link" href="{{ url_for('restocks.new_restock') }}">
+      <i class="bi bi-arrow-up-circle" aria-hidden="true"></i> Restock
+    </a>
+    <a class="nav-link" href="{{ url_for('restocks.history') }}">
+      <i class="bi bi-clock-history" aria-hidden="true"></i> Restock History
+    </a>
+    <a class="nav-link" href="{{ url_for('reports.index') }}">
+      <i class="bi bi-graph-up" aria-hidden="true"></i> Reports
+    </a>
+    <a class="nav-link" href="{{ url_for('custom_fields.list_fields') }}">
+      <i class="bi bi-sliders" aria-hidden="true"></i> Custom Fields
+    </a>
+    <a class="nav-link" href="{{ url_for('users.list_users') }}">
+      <i class="bi bi-people" aria-hidden="true"></i> Users
+    </a>
     {% endif %}
+
   </nav>
 </aside>

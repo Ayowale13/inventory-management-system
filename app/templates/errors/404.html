@@ -1,3 +1,18 @@
-{% extends 'base.html' %}{% block title %}Not Found{% endblock %}
-{% block content %}<div class="text-center py-5"><h1 class="display-1">404</h1><p>Page not found.</p><a class="btn btn-primary" href="{{ url_for('dashboard.index') }}">Back to dashboard</a></div>{% endblock %}
-{% block public %}<div class="text-center py-5"><h1 class="display-1">404</h1><p>Page not found.</p></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Not Found{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <i class="bi bi-question-circle text-muted" style="font-size:4rem;" aria-hidden="true"></i>
+  <h1 class="display-3 fw-bold mt-2">404</h1>
+  <p class="text-muted mb-4">The page you were looking for does not exist.</p>
+  <a class="btn btn-primary" href="{{ url_for('dashboard.index') }}">
+    <i class="bi bi-house me-1" aria-hidden="true"></i> Back to Dashboard
+  </a>
+</div>
+{% endblock %}
+{% block public %}
+<div class="text-center py-5">
+  <h1 class="display-3 fw-bold">404</h1>
+  <p class="text-muted">Page not found.</p>
+</div>
+{% endblock %}

@@ -1,28 +1,49 @@
 {% extends 'base.html' %}
 {% block title %}Sign In{% endblock %}
 {% block public %}
+
+{# CHANGED: login-shell and login-card styles are in app.css;
+   added autocomplete attributes for better mobile UX and password managers #}
 <div class="login-shell">
   <div class="login-card shadow-lg">
+
     <div class="text-center mb-4">
-      <div class="brand-circle"><i class="bi bi-box-seam"></i></div>
-      <h4 class="mt-3 mb-0">Store Inventory</h4>
-      <small class="text-muted">Sign in to continue</small>
+      <div class="brand-circle">
+        <i class="bi bi-box-seam" aria-hidden="true"></i>
+      </div>
+      <h4 class="mt-3 mb-0 fw-bold">StockPilot</h4>
+      <small class="text-muted">Sign in to your account</small>
     </div>
-    <form method="post">
+
+    <form method="post" autocomplete="on">
       {{ form.hidden_tag() }}
+
       <div class="mb-3">
-        <label class="form-label">Username</label>
-        {{ form.username(class="form-control", placeholder="admin") }}
+        <label class="form-label small fw-semibold" for="username">Username</label>
+        {{ form.username(class="form-control", id="username",
+                        placeholder="admin", autocomplete="username",
+                        autofocus=True) }}
       </div>
-      <div class="mb-3">
-        <label class="form-label">Password</label>
-        {{ form.password(class="form-control", placeholder="••••••••") }}
+
+      <div class="mb-4">
+        <label class="form-label small fw-semibold" for="password">Password</label>
+        {{ form.password(class="form-control", id="password",
+                        placeholder="••••••••", autocomplete="current-password") }}
       </div>
-      <button class="btn btn-primary w-100">Sign In</button>
+
+      <button class="btn btn-primary w-100 fw-semibold" type="submit">
+        <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i> Sign In
+      </button>
     </form>
-    <p class="text-center text-muted small mt-3 mb-0">
-      Demo: admin / admin123 &nbsp;•&nbsp; staff / staff123
+
+    <p class="text-center text-muted small mt-4 mb-0">
+      Demo&nbsp;&nbsp;
+      <code>admin / admin123</code>
+      &nbsp;·&nbsp;
+      <code>staff / staff123</code>
     </p>
+
   </div>
 </div>
+
 {% endblock %}

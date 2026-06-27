@@ -1,27 +1,76 @@
-{% extends 'base.html' %}{% block title %}{{ action }} Product{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ action }} Product{% endblock %}
 {% block content %}
+
 <h3 class="mb-3">{{ action }} Product</h3>
-<div class="card"><div class="card-body">
-<form method="post">{{ form.hidden_tag() }}
-  <div class="row g-3">
-    <div class="col-md-6"><label class="form-label">Name</label>{{ form.name(class="form-control") }}</div>
-    <div class="col-md-6"><label class="form-label">Category</label>{{ form.category(class="form-control") }}</div>
-    <div class="col-md-3"><label class="form-label">Cost Price</label>{{ form.cost_price(class="form-control") }}</div>
-    <div class="col-md-3"><label class="form-label">Selling Price</label>{{ form.selling_price(class="form-control") }}</div>
-    <div class="col-md-3"><label class="form-label">Quantity</label>{{ form.quantity(class="form-control") }}</div>
-    <div class="col-md-3"><label class="form-label">Min Stock</label>{{ form.min_stock(class="form-control") }}</div>
-    {% for f in custom_fields %}
-    <div class="col-md-6">
-      <label class="form-label">{{ f.label }}</label>
-      {% set val = (cv_map[f.id] if cv_map is defined and f.id in cv_map else '') %}
-      {% if f.field_type == 'number' %}<input type="number" step="any" class="form-control" name="cf_{{ f.id }}" value="{{ val }}">
-      {% elif f.field_type == 'date' %}<input type="date" class="form-control" name="cf_{{ f.id }}" value="{{ val }}">
-      {% elif f.field_type == 'boolean' %}<select class="form-select" name="cf_{{ f.id }}"><option value="">--</option><option value="true" {% if val=='true' %}selected{% endif %}>Yes</option><option value="false" {% if val=='false' %}selected{% endif %}>No</option></select>
-      {% else %}<input type="text" class="form-control" name="cf_{{ f.id }}" value="{{ val }}">{% endif %}
-    </div>
-    {% endfor %}
+
+{# CHANGED: max-width so form doesn't stretch to full 100% on ultra-wide screens;
+   row g-3 collapses all col-md-* to col-12 on mobile automatically #}
+<div class="card" style="max-width: 720px;">
+  <div class="card-body">
+    <form method="post">
+      {{ form.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Product Name</label>
+          {{ form.name(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Category</label>
+          {{ form.category(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold">Cost Price (₦)</label>
+          {{ form.cost_price(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold">Selling Price (₦)</label>
+          {{ form.selling_price(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold">Quantity</label>
+          {{ form.quantity(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold">Min Stock Level</label>
+          {{ form.min_stock(class="form-control form-control-sm") }}
+        </div>
+
+        {# Custom fields – each col-12 col-md-6 so they stack on mobile #}
+        {% for f in custom_fields %}
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">{{ f.label }}</label>
+          {% set val = (cv_map[f.id] if cv_map is defined and f.id in cv_map else '') %}
+          {% if f.field_type == 'number' %}
+            <input type="number" step="any" class="form-control form-control-sm"
+                   name="cf_{{ f.id }}" value="{{ val }}">
+          {% elif f.field_type == 'date' %}
+            <input type="date" class="form-control form-control-sm"
+                   name="cf_{{ f.id }}" value="{{ val }}">
+          {% elif f.field_type == 'boolean' %}
+            <select class="form-select form-select-sm" name="cf_{{ f.id }}">
+              <option value="">-- Select --</option>
+              <option value="true"  {% if val=='true'  %}selected{% endif %}>Yes</option>
+              <option value="false" {% if val=='false' %}selected{% endif %}>No</option>
+            </select>
+          {% else %}
+            <input type="text" class="form-control form-control-sm"
+                   name="cf_{{ f.id }}" value="{{ val }}">
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-4 d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary btn-sm">
+          <i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ form.submit.label.text }}
+        </button>
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('products.list_products') }}">
+          Cancel
+        </a>
+      </div>
+    </form>
   </div>
-  <div class="mt-3"><button class="btn btn-primary">{{ form.submit.label.text }}</button>
-    <a class="btn btn-secondary" href="{{ url_for('products.list_products') }}">Cancel</a></div>
-</form></div></div>
+</div>
+
 {% endblock %}

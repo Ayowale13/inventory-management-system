@@ -1,28 +1,101 @@
-{% extends 'base.html' %}{% block title %}Restock{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Restock Product{% endblock %}
 {% block content %}
+
 <h3 class="mb-3">Restock Product</h3>
+
+{# CHANGED: mirrors the same two-panel responsive pattern as sales/new.html #}
 <div class="row g-3">
-  <div class="col-md-5"><div class="card"><div class="card-body">
-    <form method="get"><div class="input-group">
-      <input class="form-control" name="q" value="{{ q }}" placeholder="Search product…">
-      <button class="btn btn-primary"><i class="bi bi-search"></i></button>
-    </div></form>
-    <ul class="list-group mt-3">
-      {% for p in products %}
-      <li class="list-group-item d-flex justify-content-between">
-        <div><strong>{{ p.name }}</strong><br><small class="text-muted">Stock: {{ p.quantity }}</small></div>
-        <button class="btn btn-sm btn-outline-primary" onclick="document.getElementById('product_id').value={{ p.id }}; document.getElementById('sel-name').innerText='{{ p.name }}'; document.getElementById('curr').value={{ p.quantity }};">Select</button>
-      </li>
-      {% else %}{% if q %}<li class="list-group-item text-muted">No results.</li>{% endif %}{% endfor %}
-    </ul>
-  </div></div></div>
-  <div class="col-md-7"><div class="card"><div class="card-body">
-    <h6 id="sel-name" class="mb-3">Select a product</h6>
-    <form method="post">{{ form.hidden_tag() }}{{ form.product_id(id='product_id') }}
-      <div class="mb-3"><label class="form-label">Current Stock</label><input class="form-control" id="curr" disabled></div>
-      <div class="mb-3"><label class="form-label">Quantity to Add</label>{{ form.quantity_added(class="form-control") }}</div>
-      <button class="btn btn-success w-100">{{ form.submit.label.text }}</button>
-    </form>
-  </div></div></div>
+
+  {# Left panel – product search #}
+  <div class="col-12 col-md-5">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="text-muted fw-semibold mb-3">
+          <i class="bi bi-search me-1" aria-hidden="true"></i> Find Product
+        </h6>
+        <form method="get">
+          <div class="input-group input-group-sm">
+            <input class="form-control" name="q" value="{{ q }}"
+                   placeholder="Search product name…"
+                   aria-label="Search products">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-search" aria-hidden="true"></i>
+            </button>
+          </div>
+        </form>
+
+        <ul class="list-group list-group-flush mt-3">
+          {% for p in products %}
+          <li class="list-group-item px-0 py-2">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <div class="min-w-0">
+                <strong class="d-block text-truncate">{{ p.name }}</strong>
+                <small class="text-muted">Current stock: {{ p.quantity }}</small>
+              </div>
+              <button class="btn btn-sm btn-outline-primary flex-shrink-0"
+                      type="button"
+                      onclick="pickProduct({{ p.id }}, '{{ p.name | e }}', {{ p.quantity }})">
+                Select
+              </button>
+            </div>
+          </li>
+          {% else %}
+          {% if q %}
+          <li class="list-group-item px-0 text-muted small">No products match "{{ q }}".</li>
+          {% else %}
+          <li class="list-group-item px-0 text-muted small">Search to find a product.</li>
+          {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {# Right panel – restock form #}
+  <div class="col-12 col-md-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-3" id="sel-name">
+          <i class="bi bi-arrow-up-circle me-1 text-primary" aria-hidden="true"></i>
+          Select a product to continue
+        </h6>
+        <form method="post">
+          {{ form.hidden_tag() }}
+          {{ form.product_id(id='product_id') }}
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Current Stock</label>
+            <input class="form-control form-control-sm bg-light" id="curr"
+                   disabled aria-label="Current stock">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Quantity to Add</label>
+            {{ form.quantity_added(class="form-control form-control-sm", placeholder="Enter quantity") }}
+          </div>
+
+          <div class="mt-4">
+            <button class="btn btn-success w-100" id="submitRestockBtn" disabled
+                    data-no-disable="1">
+              <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+              {{ form.submit.label.text }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+/* CHANGED: extracted inline onclick to named function for clarity;
+   enables submit button only after product is selected */
+function pickProduct(id, name, qty) {
+  document.getElementById('product_id').value = id;
+  document.getElementById('sel-name').innerHTML =
+    '<i class="bi bi-arrow-up-circle me-1 text-primary"></i>' + name;
+  document.getElementById('curr').value = qty + ' units';
+  document.getElementById('submitRestockBtn').disabled = false;
+}
+</script>
 {% endblock %}

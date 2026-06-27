@@ -1,16 +1,57 @@
-{% extends 'base.html' %}{% block title %}{{ action }} User{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ action }} User{% endblock %}
 {% block content %}
+
 <h3 class="mb-3">{{ action }} User</h3>
-<div class="card"><div class="card-body">
-<form method="post">{{ form.hidden_tag() }}
-  <div class="row g-3">
-    <div class="col-md-6"><label class="form-label">Username</label>{{ form.username(class="form-control") }}</div>
-    <div class="col-md-6"><label class="form-label">Email</label>{{ form.email(class="form-control") }}</div>
-    <div class="col-md-6"><label class="form-label">Full Name</label>{{ form.full_name(class="form-control") }}</div>
-    <div class="col-md-3"><label class="form-label">Role</label>{{ form.role(class="form-select") }}</div>
-    <div class="col-md-3"><label class="form-label d-block">&nbsp;</label><div class="form-check mt-2">{{ form.is_active(class="form-check-input") }}<label class="form-check-label">Active</label></div></div>
-    <div class="col-md-6"><label class="form-label">Password {% if user %}(leave blank to keep){% endif %}</label>{{ form.password(class="form-control") }}</div>
+
+{# CHANGED: max-width constrains form on very wide screens;
+   row g-3 already collapses col-md-6 to full-width on mobile #}
+<div class="card" style="max-width: 680px;">
+  <div class="card-body">
+    <form method="post">
+      {{ form.hidden_tag() }}
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Username</label>
+          {{ form.username(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Email</label>
+          {{ form.email(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">Full Name</label>
+          {{ form.full_name(class="form-control form-control-sm") }}
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold">Role</label>
+          {{ form.role(class="form-select form-select-sm") }}
+        </div>
+        <div class="col-6 col-md-3 d-flex align-items-end">
+          <div class="form-check mb-1">
+            {{ form.is_active(class="form-check-input") }}
+            <label class="form-check-label small fw-semibold">Active</label>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label small fw-semibold">
+            Password
+            {% if user %}<span class="text-muted fw-normal">(leave blank to keep)</span>{% endif %}
+          </label>
+          {{ form.password(class="form-control form-control-sm") }}
+        </div>
+      </div>
+
+      <div class="mt-4 d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary btn-sm">
+          <i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ form.submit.label.text }}
+        </button>
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('users.list_users') }}">
+          Cancel
+        </a>
+      </div>
+    </form>
   </div>
-  <div class="mt-3"><button class="btn btn-primary">{{ form.submit.label.text }}</button>
-    <a class="btn btn-secondary" href="{{ url_for('users.list_users') }}">Cancel</a></div>
-</form></div></div>{% endblock %}
+</div>
+
+{% endblock %}

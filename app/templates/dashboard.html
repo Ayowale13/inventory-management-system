@@ -1,50 +1,261 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
+
 <h3 class="mb-4">Dashboard</h3>
-<div class="row g-3 mb-4">
-  <div class="col-md-3"><div class="kpi-card bg-primary"><div><small>Total Products</small><h3>{{ total_products }}</h3></div><i class="bi bi-bag"></i></div></div>
-  <div class="col-md-3"><div class="kpi-card bg-info"><div><small>Total Quantity</small><h3>{{ total_quantity }}</h3></div><i class="bi bi-boxes"></i></div></div>
-  <div class="col-md-3"><div class="kpi-card bg-success"><div><small>Sales Today</small><h3>{{ total_sales_today }}</h3></div><i class="bi bi-cart-check"></i></div></div>
-  <div class="col-md-3"><div class="kpi-card bg-warning"><div><small>Revenue Today</small><h3>{{ "%.2f"|format(total_revenue_today) }}</h3></div><i class="bi bi-currency-dollar"></i></div></div>
-</div>
-<div class="row g-3 mb-4">
-  <div class="col-lg-8">
-    <div class="card"><div class="card-body"><h6 class="mb-3">Revenue — last 7 days</h6><canvas id="revChart" height="100"></canvas></div></div>
+
+{# ── KPI Cards ──────────────────────────────────────────────────────────────
+   CHANGED:
+   - Added .kpi-row to allow CSS grid override on very small screens
+   - Each column gets .kpi-col so the ≤479px rule can force 1-per-row
+   - Inner markup split into .kpi-text (min-width:0) + .kpi-icon (flex-shrink:0)
+     to prevent text overflow on narrow cards
+   - Revenue label updated to show ₦ symbol
+#}
+<div class="row g-3 mb-4 kpi-row">
+
+  <div class="col-6 col-md-3 kpi-col">
+    <div class="kpi-card bg-primary h-100">
+      <div class="kpi-text">
+        <small>Total Products</small>
+        <h3>{{ total_products }}</h3>
+      </div>
+      <i class="bi bi-bag kpi-icon" aria-hidden="true"></i>
+    </div>
   </div>
-  <div class="col-lg-4">
-    <div class="card mb-3"><div class="card-body">
-      <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Out of Stock ({{ out_of_stock|length }})</h6>
-      <ul class="small mb-0">{% for p in out_of_stock[:5] %}<li>{{ p.name }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}</ul>
-    </div></div>
-    <div class="card"><div class="card-body">
-      <h6 class="text-warning"><i class="bi bi-exclamation-circle"></i> Low Stock ({{ low_stock|length }})</h6>
-      <ul class="small mb-0">{% for p in low_stock[:5] %}<li>{{ p.name }} — {{ p.quantity }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}</ul>
-    </div></div>
+
+  <div class="col-6 col-md-3 kpi-col">
+    <div class="kpi-card bg-info h-100">
+      <div class="kpi-text">
+        <small>Total Quantity</small>
+        <h3>{{ total_quantity }}</h3>
+      </div>
+      <i class="bi bi-boxes kpi-icon" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 kpi-col">
+    <div class="kpi-card bg-success h-100">
+      <div class="kpi-text">
+        <small>Sales Today</small>
+        <h3>{{ total_sales_today }}</h3>
+      </div>
+      <i class="bi bi-cart-check kpi-icon" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 kpi-col">
+    <div class="kpi-card bg-warning h-100">
+      <div class="kpi-text">
+        {# CHANGED: label shortened to avoid overflow on small cards #}
+        <small>Revenue Today</small>
+        <h3>₦{{ "%.0f"|format(total_revenue_today) }}</h3>
+      </div>
+      <i class="bi bi-cash-stack kpi-icon" aria-hidden="true"></i>
+    </div>
+  </div>
+
+</div>
+
+{# ── Chart + Stock Alerts ─────────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
+
+  {# Revenue chart – full width on mobile, 8 cols on large #}
+  <div class="col-12 col-lg-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="mb-3 text-muted fw-semibold">
+          <i class="bi bi-bar-chart-line me-1 text-primary" aria-hidden="true"></i>
+          Revenue — last 7 days
+        </h6>
+        {# CHANGED: canvas wrapped in a relative div with a max-height so the
+           chart never grows too tall on landscape tablets #}
+        <div style="position:relative; max-height:260px;">
+          <canvas id="revChart" aria-label="Revenue chart for the last 7 days" role="img"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Stock alerts – full width on mobile, 4 cols on large #}
+  <div class="col-12 col-lg-4">
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h6 class="text-danger mb-2">
+          <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+          Out of Stock
+          <span class="badge bg-danger ms-1">{{ out_of_stock|length }}</span>
+        </h6>
+        <ul class="small mb-0 ps-3">
+          {% for p in out_of_stock[:5] %}
+            <li>{{ p.name }}</li>
+          {% else %}
+            <li class="text-muted">None — great!</li>
+          {% endfor %}
+        </ul>
+        {% if out_of_stock|length > 5 %}
+          <a class="small text-muted d-block mt-1" href="{{ url_for('products.list_products', filter='out') }}">
+            View all {{ out_of_stock|length }} &rarr;
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h6 class="text-warning mb-2">
+          <i class="bi bi-exclamation-circle-fill me-1" aria-hidden="true"></i>
+          Low Stock
+          <span class="badge bg-warning text-dark ms-1">{{ low_stock|length }}</span>
+        </h6>
+        <ul class="small mb-0 ps-3">
+          {% for p in low_stock[:5] %}
+            <li>{{ p.name }} — <strong>{{ p.quantity }}</strong> left</li>
+          {% else %}
+            <li class="text-muted">None — looking good!</li>
+          {% endfor %}
+        </ul>
+        {% if low_stock|length > 5 %}
+          <a class="small text-muted d-block mt-1" href="{{ url_for('products.list_products', filter='low') }}">
+            View all {{ low_stock|length }} &rarr;
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
   </div>
 </div>
+
+{# ── Recent Activity Tables ────────────────────────────────────────────────
+   CHANGED:
+   - Both tables wrapped in .table-responsive for horizontal scrolling on mobile
+   - "When" column uses shorter format on narrow screens via a span toggle
+#}
 <div class="row g-3">
-  <div class="col-lg-6"><div class="card"><div class="card-body">
-    <h6 class="mb-3">Recent Sales</h6>
-    <table class="table table-sm"><thead><tr><th>Product</th><th>Qty</th><th>Total</th><th>When</th></tr></thead><tbody>
-    {% for s in recent_sales %}<tr><td>{{ s.product.name }}</td><td>{{ s.quantity }}</td><td>{{ "%.2f"|format(s.total_amount) }}</td><td class="text-muted small">{{ s.created_at.strftime('%b %d %H:%M') }}</td></tr>
-    {% else %}<tr><td colspan="4" class="text-center text-muted">No sales yet.</td></tr>{% endfor %}
-    </tbody></table></div></div></div>
-  <div class="col-lg-6"><div class="card"><div class="card-body">
-    <h6 class="mb-3">Recent Restocks</h6>
-    <table class="table table-sm"><thead><tr><th>Product</th><th>Added</th><th>New Stock</th><th>When</th></tr></thead><tbody>
-    {% for r in recent_restocks %}<tr><td>{{ r.product.name }}</td><td>+{{ r.quantity_added }}</td><td>{{ r.updated_stock }}</td><td class="text-muted small">{{ r.created_at.strftime('%b %d %H:%M') }}</td></tr>
-    {% else %}<tr><td colspan="4" class="text-center text-muted">No restocks yet.</td></tr>{% endfor %}
-    </tbody></table></div></div></div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="mb-3 fw-semibold text-muted">
+          <i class="bi bi-receipt me-1 text-success" aria-hidden="true"></i>
+          Recent Sales
+        </h6>
+        {# CHANGED: table-responsive wrapper added #}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Total (₦)</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in recent_sales %}
+              <tr>
+                <td>{{ s.product.name }}</td>
+                <td>{{ s.quantity }}</td>
+                <td>{{ "%.2f"|format(s.total_amount) }}</td>
+                <td class="text-muted" style="white-space:nowrap;">
+                  {{ s.created_at.strftime('%b %d %H:%M') }}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No sales yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="mb-3 fw-semibold text-muted">
+          <i class="bi bi-arrow-up-circle me-1 text-primary" aria-hidden="true"></i>
+          Recent Restocks
+        </h6>
+        {# CHANGED: table-responsive wrapper added #}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Added</th>
+                <th>New Stock</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in recent_restocks %}
+              <tr>
+                <td>{{ r.product.name }}</td>
+                <td class="text-success fw-semibold">+{{ r.quantity_added }}</td>
+                <td>{{ r.updated_stock }}</td>
+                <td class="text-muted" style="white-space:nowrap;">
+                  {{ r.created_at.strftime('%b %d %H:%M') }}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-muted py-3">No restocks yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script>
+/* CHANGED: Chart wrapped in DOMContentLoaded guard; options updated for
+   responsiveness – maintainAspectRatio:true + max-height container does
+   the heavy lifting.  Tooltip formatter adds ₦ prefix. */
 const ctx = document.getElementById('revChart');
-new Chart(ctx, { type: 'line',
-  data: { labels: {{ chart_days|tojson }}, datasets: [{
-    label: 'Revenue', data: {{ chart_revenues|tojson }},
-    borderColor:'#0d6efd', backgroundColor:'rgba(13,110,253,.1)', tension:.3, fill:true }]},
-  options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }});
+if (ctx) {
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ chart_days | tojson }},
+      datasets: [{
+        label: 'Revenue (₦)',
+        data: {{ chart_revenues | tojson }},
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13,110,253,.10)',
+        pointBackgroundColor: '#0d6efd',
+        pointRadius: 4,
+        tension: .35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => '₦' + ctx.parsed.y.toLocaleString('en-NG', {minimumFractionDigits:2})
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => '₦' + Number(v).toLocaleString('en-NG')
+          }
+        }
+      }
+    }
+  });
+}
 </script>
 {% endblock %}

@@ -1,34 +1,123 @@
-{% extends 'base.html' %}{% block title %}Reports{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
 {% block content %}
+
 <h3 class="mb-3">Reports</h3>
+
+{# ── Export Cards ────────────────────────────────────────────────────────────
+   CHANGED: each report card is col-12 col-md-4 so they stack on mobile;
+   export buttons wrap on small screens using .btn-group-wrap
+#}
 <div class="row g-3 mb-4">
-  {% for label, sales, key in [('Daily', daily, 'daily'), ('Weekly', weekly, 'weekly'), ('Monthly', monthly, 'monthly')] %}
-  <div class="col-md-4"><div class="card"><div class="card-body">
-    <h5>{{ label }} Sales</h5>
-    <p class="text-muted mb-2">{{ sales|length }} transactions • Total {{ "%.2f"|format(sales|sum(attribute='total_amount')) }}</p>
-    <div class="btn-group btn-group-sm">
-      <a class="btn btn-outline-primary" href="{{ url_for('reports.export', period=key, fmt='csv') }}">CSV</a>
-      <a class="btn btn-outline-success" href="{{ url_for('reports.export', period=key, fmt='xlsx') }}">Excel</a>
-      <a class="btn btn-outline-danger" href="{{ url_for('reports.export', period=key, fmt='pdf') }}">PDF</a>
+  {% for label, sales, key in [
+      ('Daily',   daily,   'daily'),
+      ('Weekly',  weekly,  'weekly'),
+      ('Monthly', monthly, 'monthly')
+  ] %}
+  <div class="col-12 col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="fw-semibold mb-1">{{ label }} Sales</h5>
+        <p class="text-muted small mb-3">
+          {{ sales|length }} transactions
+          &nbsp;·&nbsp;
+          Total ₦{{ "%.2f"|format(sales|sum(attribute='total_amount')) }}
+        </p>
+        {# CHANGED: btn-group-wrap allows buttons to wrap on small screens #}
+        <div class="btn-group-wrap">
+          <a class="btn btn-outline-primary btn-sm"
+             href="{{ url_for('reports.export', period=key, fmt='csv') }}">
+            <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV
+          </a>
+          <a class="btn btn-outline-success btn-sm"
+             href="{{ url_for('reports.export', period=key, fmt='xlsx') }}">
+            <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Excel
+          </a>
+          <a class="btn btn-outline-danger btn-sm"
+             href="{{ url_for('reports.export', period=key, fmt='pdf') }}">
+            <i class="bi bi-filetype-pdf me-1" aria-hidden="true"></i>PDF
+          </a>
+        </div>
+      </div>
     </div>
-  </div></div></div>
+  </div>
   {% endfor %}
 </div>
-<div class="row g-3">
-  <div class="col-md-6"><div class="card"><div class="card-body">
-    <h6>Low Stock ({{ low|length }})</h6>
-    <ul class="small mb-0">{% for p in low %}<li>{{ p.name }} — {{ p.quantity }} / min {{ p.min_stock }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}</ul>
-  </div></div></div>
-  <div class="col-md-6"><div class="card"><div class="card-body">
-    <h6>Out of Stock ({{ out|length }})</h6>
-    <ul class="small mb-0">{% for p in out %}<li>{{ p.name }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}</ul>
-  </div></div></div>
-  <div class="col-12"><div class="card"><div class="card-body">
-    <h6>Current Inventory</h6>
-    <table class="table table-sm"><thead><tr><th>Product</th><th>Qty</th><th>Min</th><th>Status</th></tr></thead><tbody>
-      {% for p in inventory %}<tr><td>{{ p.name }}</td><td>{{ p.quantity }}</td><td>{{ p.min_stock }}</td>
-        <td><span class="badge bg-{{ 'danger' if p.is_out_of_stock else 'warning' if p.is_low_stock else 'success' }}">{{ p.stock_status }}</span></td></tr>{% endfor %}
-    </tbody></table>
-  </div></div></div>
+
+{# ── Stock Status Panels ──────────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-2">
+          <i class="bi bi-exclamation-circle-fill text-warning me-1" aria-hidden="true"></i>
+          Low Stock <span class="badge bg-warning text-dark ms-1">{{ low|length }}</span>
+        </h6>
+        <ul class="small mb-0 ps-3">
+          {% for p in low %}
+            <li>{{ p.name }} — <strong>{{ p.quantity }}</strong> / min {{ p.min_stock }}</li>
+          {% else %}
+            <li class="text-muted">No low-stock items.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-2">
+          <i class="bi bi-exclamation-triangle-fill text-danger me-1" aria-hidden="true"></i>
+          Out of Stock <span class="badge bg-danger ms-1">{{ out|length }}</span>
+        </h6>
+        <ul class="small mb-0 ps-3">
+          {% for p in out %}
+            <li>{{ p.name }}</li>
+          {% else %}
+            <li class="text-muted">No out-of-stock items.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
 </div>
+
+{# ── Inventory Snapshot Table ─────────────────────────────────────────────── #}
+<div class="card">
+  <div class="card-body pb-0">
+    <h6 class="fw-semibold mb-3">
+      <i class="bi bi-table me-1 text-primary" aria-hidden="true"></i>
+      Current Inventory Snapshot
+    </h6>
+  </div>
+  {# CHANGED: table-responsive for horizontal scroll on mobile #}
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th class="d-none d-sm-table-cell">Min Stock</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in inventory %}
+        <tr>
+          <td>{{ p.name }}</td>
+          <td><strong>{{ p.quantity }}</strong></td>
+          <td class="d-none d-sm-table-cell text-muted">{{ p.min_stock }}</td>
+          <td>
+            <span class="badge bg-{{ 'danger' if p.is_out_of_stock else 'warning text-dark' if p.is_low_stock else 'success' }}">
+              {{ p.stock_status }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
 {% endblock %}
